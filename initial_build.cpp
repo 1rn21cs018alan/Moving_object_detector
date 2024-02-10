@@ -1,15 +1,24 @@
-
 #include "opencv2/opencv.hpp"
 #include <iostream>
 
 using namespace std;
 using namespace cv;
-int main() {
+int main(int argc, char** argv) {
 
     // Create a VideoCapture object and open the input file
     // If the input is the web camera, pass 0 instead of the video file name
-    VideoCapture cap("C:\\Users\\CS\\Desktop\\Hackathon.mp4");
-
+    VideoCapture cap;
+    if (argc >= 2) {
+        //cout << argv[1];
+        cap = VideoCapture(argv[1]);
+    }
+    else {
+        // this else statement is for the exe to run on our local machine only
+        cap = VideoCapture("C:\\Users\\CS\\Desktop\\Hackathon.mp4");
+    }
+    int width = cap.get(CAP_PROP_FRAME_WIDTH);
+    int height = cap.get(CAP_PROP_FRAME_HEIGHT);
+    VideoWriter video("output.avi", VideoWriter::fourcc('X', 'V', 'I', 'D'), 10, Size(width, height), true);
     // Check if camera opened successfully
     if (!cap.isOpened()) {
         cout << "Error opening video stream or file" << endl;
@@ -55,15 +64,11 @@ int main() {
                     temp.at<Vec3b>(Point(x, y)) = frame_pixel;
                 }
             }
-            cv::imshow("out", temp);
-            cv::imshow("Frame", img);
+            //cv::imshow("out", temp);
+            video.write(temp);
         }
         // Display the resulting frame
 
-        // Press  ESC on keyboard to exit
-        char c = (char)waitKey(25);
-        if (c == 27 || c == 113)
-            break;
         if (prev_exists > 0) {
             absdiff(prev, frame, temp);
             cvtColor(temp, dif[pointer], COLOR_BGR2GRAY);
