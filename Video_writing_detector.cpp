@@ -1,16 +1,21 @@
 
-
 #include "opencv2/opencv.hpp"
 #include <iostream>
 
 using namespace std;
 using namespace cv;
-int main() {
+int main(int argc,char** argv) {
 
     // Create a VideoCapture object and open the input file
     // If the input is the web camera, pass 0 instead of the video file name
-    VideoCapture cap("C:\\Users\\CS\\Desktop\\Hackathon.mp4");
-
+    VideoCapture cap;
+    if (argc >= 2) {
+        //cout << argv[1];
+        cap=VideoCapture(argv[1]);
+    }
+    else {// this else statement is for the exe to run on our local machine only
+        cap=VideoCapture ("C:\\Users\\CS\\Desktop\\Hackathon.mp4");
+    }
     // Check if camera opened successfully
     if (!cap.isOpened()) {
         cout << "Error opening video stream or file" << endl;
@@ -29,7 +34,6 @@ int main() {
     bg = Mat(img.rows, img.cols, CV_8UC1);
     conflict = Mat(img.rows, img.cols, CV_8UC1);
     kern = Mat::ones(Size(5, 5), CV_8UC1);
-    //kern.at<uchar>(2,2) = 0;
     bool first_frame = true;
     while (1) {
 
@@ -38,6 +42,7 @@ int main() {
             break;
         GaussianBlur(img, frame, Size(5, 5), 0);
         cvtColor(frame, gray, COLOR_BGR2GRAY);
+        // If the frame is empty, break immediately
         if (first_frame) {
             first_frame = false;
             gray.copyTo(bg);
@@ -68,7 +73,9 @@ int main() {
         medianBlur(temp2, temp1, 5);
         inRange(temp1, 128, 255, temp2);
         filter2D(temp2, temp1, -1, kern);
+
         Canny(temp1, temp2, 0, 255);
+
         for (int x = 0; x < bg.rows; x++) {
             for (int y = 0; y < bg.cols; y++) {
                 if (temp2.at<uchar>(Point(y, x)) != 0)
@@ -79,8 +86,10 @@ int main() {
                 }
             }
         }
+
         video.write(img);
 
+    }
 
     // When everything done, release the video capture object
     cap.release();
