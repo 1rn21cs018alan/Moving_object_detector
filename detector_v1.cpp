@@ -8,10 +8,10 @@ int main() {
 
     // Create a VideoCapture object and open the input file
     // If the input is the web camera, pass 0 instead of the video file name
-    String keys ="{@image|<none>| input video path}" , "@location||Memory location"; 
+    String keys ="@location||Memory location" , "{path|<none>| input video path}" ; 
     CommandLineParser parser(argc, argv, keys);
-    String path = parser.get<String>(0); // read @image (mandatory, error if not present)
-    String location = parser.get<String>(1);
+    String path = parser.get<String>(path); // read @image (mandatory, error if not present)
+    String location = parser.get<String>(0);
     VideoCapture cap(path);
    
     // Check if camera opened successfully
