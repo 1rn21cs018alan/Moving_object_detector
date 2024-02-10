@@ -8,13 +8,20 @@ int main() {
 
     // Create a VideoCapture object and open the input file
     // If the input is the web camera, pass 0 instead of the video file name
-    VideoCapture cap("C:\\Users\\CS\\Desktop\\Hackathon.mp4");
-
+    String keys ="{@image|<none>| input video path}" , "@location||Memory location"; 
+    CommandLineParser parser(argc, argv, keys);
+    String path = parser.get<String>(0); // read @image (mandatory, error if not present)
+    String location = parser.get<String>(1);
+    VideoCapture cap(path);
+   
     // Check if camera opened successfully
     if (!cap.isOpened()) {
         cout << "Error opening video stream or file" << endl;
         return -1;
     }
+    int width = cap.get(CV_CAP_PROP_FRAME_WIDTH);
+    int height = cap.get(CV_CAP_PROP_FRAME_HEIGHT);
+    VideoWriter video("output.avi",CV_FOURCC('M','J','P','G'),10, Size(width,height),true);
     const int buf_size = 1;
     Mat prev,dif[buf_size],temp;
     int prev_exists = 0,pointer=0;
@@ -57,6 +64,7 @@ int main() {
             }
             cv::imshow("out", temp);
             cv::imshow("Frame", img);
+            video.write(temp);
         }
         // Display the resulting frame
 
