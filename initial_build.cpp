@@ -1,3 +1,4 @@
+// Enter only the path file, not memory address
 #include "opencv2/opencv.hpp"
 #include <iostream>
 
@@ -9,7 +10,7 @@ int main(int argc, char** argv) {
     // If the input is the web camera, pass 0 instead of the video file name
     VideoCapture cap;
     if (argc >= 2) {
-        //cout << argv[1];
+        //arg[1] is the path of video file to be processed, it needs to passed in command line
         cap = VideoCapture(argv[1]);
     }
     else {
@@ -18,39 +19,54 @@ int main(int argc, char** argv) {
     }
     int width = cap.get(CAP_PROP_FRAME_WIDTH);
     int height = cap.get(CAP_PROP_FRAME_HEIGHT);
+
+    //initialising video writer with encoding type XVID and specifying the path of output file but over here only file name with extension is specified hence stores in current directory
     VideoWriter video("output.avi", VideoWriter::fourcc('X', 'V', 'I', 'D'), 10, Size(width, height), true);
+    
     // Check if camera opened successfully
     if (!cap.isOpened()) {
+        //handling the error, if it fail to load video file from specified path
         cout << "Error opening video stream or file" << endl;
         return -1;
     }
+    
+    // variable to store how many previous frames to be compared
     const int buf_size = 1;
+    
+    //Declaring Mat objects necessary for processing
     Mat prev, dif[buf_size], temp;
-    int prev_exists = 0, pointer = 0;
-    while (1) {
 
+    //variable to keep track of number of previous frames and frame comparison counter
+    int prev_exists = 0, pointer = 0;
+    
+    while (1) {
         Mat frame, img;
         // Capture frame-by-frame
         if (!cap.read(img))
             break;
+
+        //applying gaussian blur for reducing noise in the frame
         GaussianBlur(img, frame, Size(5, 5), 0);
+        
         // If the frame is empty, break immediately
         if (frame.empty())
             break;
+
+        //starts the processing after getting sufficient previous frames for processing
         if (prev_exists > buf_size) {
             Mat sumdif = Mat::zeros(frame.rows, frame.cols, CV_8UC1);
             for (int i = 0; i < buf_size; i++)
                 add(sumdif, dif[i], sumdif);
-            //imshow("merged", sumdif);
+            
 
             Mat out, kern;
             kern = Mat::ones(15, 15, CV_8UC1);
-            //out = sumdif.clone();
+            
             filter2D(sumdif, out, -1, kern);
-            //floodFill(out)
+            
             morphologyEx(out, sumdif, MORPH_CLOSE, kern);
             Canny(sumdif, out, 255, 10);
-            //imshow("filtered", out);
+            
             temp = img.clone();
             for (int y = 0; y < frame.rows; y++) {
                 for (int x = 0; x < frame.cols; x++) {
@@ -64,17 +80,27 @@ int main(int argc, char** argv) {
                     temp.at<Vec3b>(Point(x, y)) = frame_pixel;
                 }
             }
-            //cv::imshow("out", temp);
+            
+            //writing the overlayed img frame to the video writer stream
             video.write(temp);
         }
         // Display the resulting frame
 
         if (prev_exists > 0) {
+            //calculates the absolute difference between current frame and previous frame, stores it in temp
             absdiff(prev, frame, temp);
+
+            //stores only gray scaled images in the previous frame buffer
             cvtColor(temp, dif[pointer], COLOR_BGR2GRAY);
+
+            //considered only if the difference is significant, in this case we used benchmark as 40-255
             inRange(dif[pointer], Scalar(40), Scalar(255), dif[pointer]);
+
+            //tracking the count of previous frame, so that we won't end up comparing not initalized object
             pointer = (pointer + 1) % buf_size;
         }
+        
+        // copying current frame to previous frame object
         prev = frame.clone();
         prev_exists++;
     }
