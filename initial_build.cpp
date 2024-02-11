@@ -65,6 +65,8 @@ int main(int argc, char** argv) {
             filter2D(sumdif, out, -1, kern);
             
             morphologyEx(out, sumdif, MORPH_CLOSE, kern);
+            
+            //highlights a sharp edges using canny
             Canny(sumdif, out, 255, 10);
             
             temp = img.clone();
