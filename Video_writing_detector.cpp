@@ -1,4 +1,4 @@
-
+// Enter only the path file, not memory address
 #include "opencv2/opencv.hpp"
 #include <iostream>
 
@@ -10,7 +10,7 @@ int main(int argc,char** argv) {
     // If the input is the web camera, pass 0 instead of the video file name
     VideoCapture cap;
     if (argc >= 2) {
-        //cout << argv[1];
+        //
         cap=VideoCapture(argv[1]);
     }
     else {// this else statement is for the exe to run on our local machine only
